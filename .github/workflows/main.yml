@@ -32,7 +32,7 @@ jobs:
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v21
         with:
-          aws_region: us-east-1
+          region: us-east-1
           application_name: speedcola-api-env
           environment_name: Speedcola-api-env-env
           version_label: ${{ github.sha }}
