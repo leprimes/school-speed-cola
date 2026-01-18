@@ -42,8 +42,8 @@ jobs:
           aws_secret_key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws_session_token: ${{ env.AWS_SESSION_TOKEN }}
           region: us-east-1
-          application_name: speedcola-api-env
-          environment_name: Speedcola-api-env-env
+          application_name: speedcola
+          environment_name: Speedcola-env
           version_label: ${{ github.sha }}
           deployment_package: deploy.zip
           wait_for_deployment: true
