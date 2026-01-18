@@ -5,6 +5,10 @@ on:
     branches: ["main"]
   workflow_dispatch:
 
+concurrency:
+  group: beanstalk-deploy
+  cancel-in-progress: true
+
 permissions:
   id-token: write
   contents: read
@@ -27,7 +31,9 @@ jobs:
         run: |
           zip -r deploy.zip . \
             -x "*.git*" \
-            -x "node_modules/*"
+            -x "node_modules/*" \
+            -x "docker-compose.yml" \
+            -x "docker-compose.local.yml"
 
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v21
@@ -40,3 +46,5 @@ jobs:
           environment_name: Speedcola-api-env-env
           version_label: ${{ github.sha }}
           deployment_package: deploy.zip
+          wait_for_deployment: true
+          wait_for_environment_recovery: true
