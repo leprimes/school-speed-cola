@@ -1,3 +1,5 @@
+// hootie edit
+
 const express = require("express");
 const cors = require("cors");
 const http = require("http");
@@ -30,7 +32,7 @@ async function start() {
 
   app.set("io", io);
   server.listen(PORT, () =>
-    console.log(`🚀 Servidor corriendo en puerto ${PORT}`)
+    console.log(`🚀 Servidor corriendo en puerto ${PORT}`),
   );
 }
 
