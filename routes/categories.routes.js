@@ -1,6 +1,6 @@
-const express = require('express');
-const pool = require('../config/db');
-const NodeCache = require('node-cache');
+const express = require("express");
+const { getPool } = require("../config/db");
+const NodeCache = require("node-cache");
 
 const router = express.Router();
 
@@ -8,29 +8,32 @@ const router = express.Router();
 const cache = new NodeCache({ stdTTL: 120, checkperiod: 150 });
 
 // GET - Obtener todas las categorías con cache
-router.get('/api/categories', async (req, res) => {
+router.get("/api/categories", async (req, res) => {
   try {
-    const cacheKey = 'categories';
+    const pool = getPool();
+    const cacheKey = "categories";
 
     //Buscar en caché
     const cachedData = cache.get(cacheKey);
     if (cachedData) {
-      console.log('Cache hit: /api/categories');
+      console.log("Cache hit: /api/categories");
       return res.json(cachedData);
     }
 
     // Si no existe en caché, consultar DB
-    console.log('Cache miss: /api/categories');
-    const [rows] = await pool.query('SELECT * FROM categoria');
+    console.log("Cache miss: /api/categories");
+    const [rows] = await pool.query("SELECT * FROM categoria");
 
     // Guardar en caché
     cache.set(cacheKey, rows);
-    console.log('Data guardada en caché');
+    console.log("Data guardada en caché");
 
     res.json(rows);
   } catch (error) {
-    console.error('Error al mostrar Categorías:', error);
-    res.status(500).json({ error: 'Error al mostrar Categorías', details: error.message });
+    console.error("Error al mostrar Categorías:", error);
+    res
+      .status(500)
+      .json({ error: "Error al mostrar Categorías", details: error.message });
   }
 });
 

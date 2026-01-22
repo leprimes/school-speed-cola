@@ -1,12 +1,13 @@
-const express = require('express');
-const pool = require('../config/db');
+const express = require("express");
+const { getPool } = require("../config/db");
 const router = express.Router();
 
 // GET - Obtener todos los chats de un proveedor
-router.get('/api/chats/provider/:providerId', async (req, res) => {
+router.get("/api/chats/provider/:providerId", async (req, res) => {
   try {
+    const pool = getPool();
     const providerId = parseInt(req.params.providerId);
-    
+
     const [chats] = await pool.query(
       `SELECT 
         c.idChat,
@@ -29,21 +30,22 @@ router.get('/api/chats/provider/:providerId', async (req, res) => {
       JOIN usuarios cliente ON c.idCliente = cliente.idUsuario
       WHERE c.idProveedor = ?
       ORDER BY fechaUltimoMensaje DESC`,
-      [providerId, providerId]
+      [providerId, providerId],
     );
-    
+
     res.json(chats);
   } catch (error) {
-    console.error('Error obteniendo chats del proveedor:', error);
-    res.status(500).json({ error: 'Error al obtener chats' });
+    console.error("Error obteniendo chats del proveedor:", error);
+    res.status(500).json({ error: "Error al obtener chats" });
   }
 });
 
 // GET - Obtener todos los chats de un cliente
-router.get('/api/chats/client/:clientId', async (req, res) => {
+router.get("/api/chats/client/:clientId", async (req, res) => {
   try {
+    const pool = getPool();
     const clientId = parseInt(req.params.clientId);
-    
+
     const [chats] = await pool.query(
       `SELECT 
         c.idChat,
@@ -66,13 +68,13 @@ router.get('/api/chats/client/:clientId', async (req, res) => {
       JOIN usuarios proveedor ON c.idProveedor = proveedor.idUsuario
       WHERE c.idCliente = ?
       ORDER BY fechaUltimoMensaje DESC`,
-      [clientId, clientId]
+      [clientId, clientId],
     );
-    
+
     res.json(chats);
   } catch (error) {
-    console.error('Error obteniendo chats del cliente:', error);
-    res.status(500).json({ error: 'Error al obtener chats' });
+    console.error("Error obteniendo chats del cliente:", error);
+    res.status(500).json({ error: "Error al obtener chats" });
   }
 });
 
