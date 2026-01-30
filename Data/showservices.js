@@ -11,32 +11,36 @@ document.addEventListener("DOMContentLoaded", async () => {
     const sessionData = await response.json();
     console.log(sessionData);
 
-    if (sessionData.loggedIn && sessionData.user.isprovider) {
-      const emailProveedor = sessionData.user.email;
+    if (sessionData.loggedIn) {
+      const role = String(sessionData.user?.isprovider || "").toLowerCase();
+      const isProvider =
+        role === "proveedor" || role === "1" || role === "true";
 
-      // Verificar si YA tiene servicio creado
-      const serviceCheck = await fetch(`/api/serviceProv/${emailProveedor}`, {
-        method: "GET",
-        credentials: "include",
-      });
-
-      if (serviceCheck.status === 404) {
-        // NO TIENE SERVICIO → Mostrar botón
-        console.log("Proveedor NO tiene servicio — mostrar botón");
+      if (isProvider) {
+        console.log("✅ Provider logged in — show Create Service button");
 
         const container = document.querySelector(".row.mb-4.g-3");
-        const btn = document.createElement("button");
-        btn.textContent = "Crear Servicio";
-        btn.style.display = "block";
-        btn.style.backgroundColor = "#f35525";
-        btn.className = "btn btn-success mb-3";
-        btn.setAttribute("data-bs-toggle", "modal");
-        btn.setAttribute("data-bs-target", "#createServiceModal");
+        if (container) {
+          // prevent duplicate buttons if script runs twice
+          if (!document.getElementById("createServiceBtn")) {
+            const btn = document.createElement("button");
+            btn.id = "createServiceBtn";
+            btn.textContent = "Crear Servicio";
+            btn.style.display = "block";
+            btn.style.backgroundColor = "#f35525";
+            btn.className = "btn btn-success mb-3";
+            btn.setAttribute("data-bs-toggle", "modal");
+            btn.setAttribute("data-bs-target", "#createServiceModal");
 
-        container.insertBefore(btn, container.firstChild);
+            container.insertBefore(btn, container.firstChild);
+          }
+        } else {
+          console.warn(
+            "Could not find container .row.mb-4.g-3 for Create button",
+          );
+        }
       } else {
-        // Tiene servicio → No mostrar botón
-        console.log("Proveedor YA TIENE servicio — ocultar botón");
+        console.log("User is not provider — do not show Create Service button");
       }
     }
 
