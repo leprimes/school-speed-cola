@@ -269,7 +269,7 @@ router.get("/api/serviceProv/:email", async (req, res) => {
         .status(404)
         .json({ message: "El proveedor no tiene servicios" });
 
-    return res.status(200).json(rows[0]);
+    return res.status(200).json(rows);
   } catch (error) {
     res.status(500).json({ message: "Error fetching service" });
   }
