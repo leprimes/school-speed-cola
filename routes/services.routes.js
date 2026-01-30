@@ -40,8 +40,20 @@ router.post("/api/services", async (req, res) => {
       email,
     } = req.body;
 
-    if (!nombre || !precio || !duracionEstimada || !idCategoria) {
-      return res.status(400).json({ error: "Missing required fields" });
+    const precioNum = Number(precio);
+    const duracionNum = Number(duracionEstimada);
+    const categoriaNum = Number(idCategoria);
+
+    if (
+      !nombre ||
+      !Number.isFinite(precioNum) ||
+      !Number.isFinite(duracionNum) ||
+      !Number.isInteger(categoriaNum)
+    ) {
+      return res.status(400).json({
+        error: "Missing/invalid required fields",
+        received: { nombre, precio, duracionEstimada, idCategoria },
+      });
     }
 
     // Obtener idUsuario desde email
@@ -62,11 +74,11 @@ router.post("/api/services", async (req, res) => {
       [
         nombre,
         descripcion,
-        precio,
-        duracionEstimada,
+        precioNum,
+        duracionNum,
         imagen,
         idUsuario,
-        idCategoria,
+        categoriaNum,
       ],
     );
 
@@ -166,12 +178,22 @@ router.put("/api/services/:id", async (req, res) => {
 router.delete("/api/services/:id", async (req, res) => {
   try {
     const pool = getPool();
-    await pool.query("DELETE FROM servicios WHERE idServicio = ?", [
-      req.params.id,
-    ]);
-    res.status(200).json({ message: "Servicio eliminado" });
+    const [result] = await pool.query(
+      "DELETE FROM servicios WHERE idServicio = ?",
+      [req.params.id],
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Service not found" });
+    }
+
+    res
+      .status(200)
+      .json({ message: "Servicio eliminado", deletedId: req.params.id });
   } catch (error) {
-    res.status(500).json({ error: "Error al eliminar" });
+    res
+      .status(500)
+      .json({ error: "Error al eliminar", details: error.message });
   }
 });
 

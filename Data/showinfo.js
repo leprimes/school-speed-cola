@@ -98,32 +98,38 @@ function renderUserService(servicio) {
   const deleteBtn = document.createElement("button");
   deleteBtn.textContent = "Delete";
   deleteBtn.className = "btn btn-sm btn-danger";
+  
   deleteBtn.addEventListener("click", async () => {
-    if (!confirm("¿Estás seguro que quieres eliminar este servicio?")) return;
+  if (!confirm("¿Estás seguro que quieres eliminar este servicio?")) return;
 
-    try {
-      const response = await fetch(`/api/services/${servicio.idServicio}`, {
-        method: "DELETE",
-        credentials: "include"
+  try {
+    const response = await fetch(`/api/services/${servicio.idServicio}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (response.ok) {
+      alert("Servicio eliminado correctamente");
+
+      // Re-fetch + re-render
+      const resp = await fetch("/api/servicesUsers", {
+        method: "GET",
+        credentials: "include",
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        alert("Servicio eliminado correctamente");
-        
-        container.remove();
-      } else {
-        alert("Error eliminando servicio: " + (data.error || "Unknown error"));
-      }
-    } catch (error) {
-      console.error("Error eliminando servicio:", error);
-      alert("Error eliminando servicio. Intenta nuevamente.");
+      servicios = await resp.json();
+      renderServices(servicios);
+    } else {
+      alert("Error eliminando servicio: " + (data.error || "Unknown error"));
     }
-  });
-  buttonsContainer.appendChild(deleteBtn);
+  } catch (error) {
+    console.error("Error eliminando servicio:", error);
+    alert("Error eliminando servicio. Intenta nuevamente.");
+  }
+});
 
-}
 
 async function loadCategoriesForModal() {
   try {
