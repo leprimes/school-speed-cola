@@ -1,13 +1,10 @@
-
-
 document.addEventListener("DOMContentLoaded", async () => {
   const params = new URLSearchParams(window.location.search);
   const serviceId = params.get("id");
 
-  // fetch a la ruta protegida para obtener el usuario logeado
   const response = await fetch("/api/check-session", {
     method: "GET",
-    credentials: "include" // importante para enviar la cookie
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -16,17 +13,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
+  const sessionData = await response.json();
+
   if (!serviceId) {
     console.error("No service ID found in URL");
     return;
   }
 
   try {
-    const resp = await fetch(`/api/services/${serviceId}`, { method: "GET", credentials: "include" });
+    const resp = await fetch(`/api/services/${serviceId}`, {
+      method: "GET",
+      credentials: "include",
+    });
     if (!resp.ok) throw new Error("Failed to fetch service");
     const service = await resp.json();
 
-    renderSingleService(service);
+    renderSingleService(service, sessionData);
     loadProviderReviews(service.idUsuario);
   } catch (err) {
     console.error("Error fetching service:", err);
@@ -37,7 +39,9 @@ async function loadProviderReviews(idProveedor) {
   const container = document.getElementById("provider-reviews");
 
   try {
-    const res = await fetch(`/api/resenas/recibidas/${idProveedor}?isProvider=1`);
+    const res = await fetch(
+      `/api/resenas/recibidas/${idProveedor}?isProvider=1`,
+    );
     const reseñas = await res.json();
 
     if (!reseñas.length) {
@@ -45,7 +49,9 @@ async function loadProviderReviews(idProveedor) {
       return;
     }
 
-    container.innerHTML = reseñas.map(r => `
+    container.innerHTML = reseñas
+      .map(
+        (r) => `
       <div class="review-card">
         <div class="review-header">
           <strong>${r.nombreAutor}</strong>
@@ -53,19 +59,34 @@ async function loadProviderReviews(idProveedor) {
         </div>
         <p>${r.comentarios}</p>
       </div>
-    `).join("");
-
+    `,
+      )
+      .join("");
   } catch (error) {
     console.error("Error cargando reseñas:", error);
     container.innerHTML = "<p>Error al cargar reseñas.</p>";
   }
 }
 
-
-
-function renderSingleService(servicio) {
+function renderSingleService(servicio, sessionData) {
   const container = document.getElementById("single-service-container");
   if (!container) return;
+
+  const userId = sessionData?.user?.id;
+  const isOwner = userId && userId === servicio.idUsuario;
+
+  const actionsHtml = isOwner
+    ? `<div class="alert alert-info mt-3">Este es tu servicio.</div>`
+    : `
+        <div class="service-actions mt-4">
+          <button class="btn btn-chat" onclick="openChat(${servicio.idUsuario})">
+            <i class="fa fa-comments"></i> Chat
+          </button>
+          <button class="btn btn-hire" onclick="openHireModal(${servicio.idServicio}, '${servicio.nombreServicio}', ${servicio.precio}, '${servicio.duracionEstimada}', '${servicio.nombreProveedor}', '${servicio.descripcion}', ${servicio.idUsuario})">
+            <i class="fa fa-briefcase"></i> Contratar servicio
+          </button>
+        </div>
+      `;
 
   container.innerHTML = `
     <div class="service-detail mb-5">
@@ -81,14 +102,7 @@ function renderSingleService(servicio) {
           <p><strong>👤 Provider:</strong> ${servicio.nombreProveedor || "Unknown"}</p>
         </div>
 
-        <div class="service-actions mt-4">
-          <button class="btn btn-chat" onclick="openChat(${servicio.idUsuario})">
-            <i class="fa fa-comments"></i> Chat
-          </button>
-          <button class="btn btn-hire" onclick="openHireModal(${servicio.idServicio}, '${servicio.nombreServicio}', ${servicio.precio}, '${servicio.duracionEstimada}', '${servicio.nombreProveedor}', '${servicio.descripcion}', ${servicio.idUsuario})">
-            <i class="fa fa-briefcase"></i> Contratar servicio
-          </button>
-        </div>
+        ${actionsHtml}
       </div>
     </div>
 
@@ -112,12 +126,22 @@ function renderSingleService(servicio) {
 }
 
 // Función para abrir el modal
-async function openHireModal(idServicio, nombreServicio, precio, duracion, proveedor, descripcion, idProveedor) {
+async function openHireModal(
+  idServicio,
+  nombreServicio,
+  precio,
+  duracion,
+  proveedor,
+  descripcion,
+  idProveedor,
+) {
   const modal = document.getElementById("hireModal");
   const modalBody = document.getElementById("modal-body");
 
   // Verificar usuario logeado
-  const response = await fetch("/api/check-session", { credentials: "include" });
+  const response = await fetch("/api/check-session", {
+    credentials: "include",
+  });
   const data = await response.json();
   const idCliente = data.user.id;
 
@@ -126,7 +150,7 @@ async function openHireModal(idServicio, nombreServicio, precio, duracion, prove
     alert("Este es tu propio servicio, no puedes contratarlo.");
     return;
   }
-  
+
   modalBody.innerHTML = `
     <p><strong>Service:</strong> ${nombreServicio}</p>
     <p><strong>Price:</strong> $${precio}</p>
@@ -156,7 +180,7 @@ async function openHireModal(idServicio, nombreServicio, precio, duracion, prove
       </div>
     </form>
   `;
-  
+
   modal.style.display = "block";
 }
 
@@ -169,93 +193,109 @@ function closeHireModal() {
 // Función para procesar la contratación
 async function submitHire(event, idServicio, idProveedor, costo) {
   event.preventDefault();
-  const response = await fetch('/api/check-session', {
-      credentials: 'include'
+  const response = await fetch("/api/check-session", {
+    credentials: "include",
   });
   const data = await response.json();
-  
+
   let idCliente = data.user.id;
   let idCita;
-  
+
   let fecha = document.getElementById("fecha").value;
   const hora = document.getElementById("hora").value;
   const especificaciones = document.getElementById("notas").value;
 
   const fechaLocal = new Date(`${fecha}T${hora}:00`);
   const fechaUTC = fechaLocal.toISOString();
-  fecha = fechaUTC
+  fecha = fechaUTC;
   try {
-    const response_2 = await fetch('/api/citas', {
-      method: 'POST',
+    const response_2 = await fetch("/api/citas", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ fecha, idCliente, idProveedor, idServicio, costo, especificaciones})
+      body: JSON.stringify({
+        fecha,
+        idCliente,
+        idProveedor,
+        idServicio,
+        costo,
+        especificaciones,
+      }),
     });
 
     if (response_2.ok) {
       const data = await response_2.json();
-      console.log(data)
-      idCita = data.id
-      console.log("creada con exito cita")
+      console.log(data);
+      idCita = data.id;
+      console.log("creada con exito cita");
     }
 
     if (!response_2.ok) {
-        const errData = await response.json().catch(() => ({}));
-        console.error('Error del servidor:', errData);
+      const errData = await response.json().catch(() => ({}));
+      console.error("Error del servidor:", errData);
     }
-  }catch (err) {
-    console.error('Error:', err);
-    alert('Falló la conexión con el servidor');
+  } catch (err) {
+    console.error("Error:", err);
+    alert("Falló la conexión con el servidor");
   }
 
-  try{
-
-    const response_3 = await fetch('/api/contrato', {
-      method: 'POST',
+  try {
+    const response_3 = await fetch("/api/contrato", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ idCita, fecha, idCliente, idProveedor, idServicio, costo, especificaciones})
+      body: JSON.stringify({
+        idCita,
+        fecha,
+        idCliente,
+        idProveedor,
+        idServicio,
+        costo,
+        especificaciones,
+      }),
     });
 
     if (response_3.ok) {
       const data_2 = await response_3.json();
-      console.log(data_2)
-      console.log("creada con exito contrato")
+      console.log(data_2);
+      console.log("creada con exito contrato");
     }
 
     if (!response_3.ok) {
-        const errData = await response.json().catch(() => ({}));
-        console.error('Error del servidor:', errData);
+      const errData = await response.json().catch(() => ({}));
+      console.error("Error del servidor:", errData);
     }
-  }catch(err){
-    console.error('Error:', err);
-    alert('Falló la conexión con el servidor');
+  } catch (err) {
+    console.error("Error:", err);
+    alert("Falló la conexión con el servidor");
   }
-  
+
   alert("¡Servicio contratado exitosamente!");
   closeHireModal();
 }
 
 // Cerrar modal al hacer click fuera de él
-window.onclick = function(event) {
+window.onclick = function (event) {
   const modal = document.getElementById("hireModal");
   if (event.target == modal) {
     closeHireModal();
   }
-}
+};
 
 // Función para abrir el chat con el proveedor
 async function openChat(proveedorId) {
   try {
     // Verificar sesión
-    const response = await fetch('/api/check-session', { credentials: 'include' });
+    const response = await fetch("/api/check-session", {
+      credentials: "include",
+    });
     const data = await response.json();
 
     if (!data.loggedIn) {
-      alert('Debes iniciar sesión para chatear');
-      window.location.href = '/index.html';
+      alert("Debes iniciar sesión para chatear");
+      window.location.href = "/index.html";
       return;
     }
 
@@ -268,11 +308,13 @@ async function openChat(proveedorId) {
     }
 
     // Obtener token del backend (desde la cookie)
-    const tokenResp = await fetch('/api/socket-token', { credentials: 'include' });
+    const tokenResp = await fetch("/api/socket-token", {
+      credentials: "include",
+    });
     const tokenData = await tokenResp.json();
 
     if (!tokenData.token) {
-      alert('Error: no se encontró el token');
+      alert("Error: no se encontró el token");
       return;
     }
 
@@ -282,7 +324,7 @@ async function openChat(proveedorId) {
     // Redirigir al chat
     window.location.href = `/chat.html?to=${proveedorId}`;
   } catch (error) {
-    console.error('Error abriendo chat:', error);
-    alert('Error al abrir el chat. Por favor intenta de nuevo.');
+    console.error("Error abriendo chat:", error);
+    alert("Error al abrir el chat. Por favor intenta de nuevo.");
   }
 }

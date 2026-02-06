@@ -1,6 +1,7 @@
 const express = require("express");
 const NodeCache = require("node-cache");
 const { getPool } = require("../config/db");
+const authenticateToken = require("../middleware/auth");
 const router = express.Router();
 
 const cache = new NodeCache();
@@ -27,7 +28,7 @@ router.get("/api/services", async (req, res) => {
 // ============================================================
 // SP-SRV-02 / SP-SRV-03 – CREAR SERVICIO
 // ============================================================
-router.post("/api/services", async (req, res) => {
+router.post("/api/services", authenticateToken, async (req, res) => {
   try {
     const pool = getPool();
     const {
@@ -37,7 +38,6 @@ router.post("/api/services", async (req, res) => {
       duracionEstimada,
       imagen,
       idCategoria,
-      email,
     } = req.body;
 
     const precioNum = Number(precio);
@@ -56,19 +56,14 @@ router.post("/api/services", async (req, res) => {
       });
     }
 
-    // Obtener idUsuario desde email
-    const [users] = await pool.query(
-      "SELECT idUsuario FROM usuarios WHERE email = ?",
-      [email],
-    );
-
-    if (users.length === 0) {
-      return res.status(404).json({ error: "User not found" });
+    const idUsuario = req.user?.id;
+    if (!idUsuario) {
+      return res.status(401).json({ error: "No autorizado" });
+    }
+    if (!req.user?.isprovider) {
+      return res.status(403).json({ error: "Solo proveedores" });
     }
 
-    const idUsuario = users[0].idUsuario;
-
-    // Insertar servicio
     const [result] = await pool.query(
       "INSERT INTO servicios (nombre, descripcion, precio, duracionEstimada, imagen, idUsuario, idCategoria) VALUES (?, ?, ?, ?, ?, ?, ?)",
       [
@@ -139,7 +134,7 @@ router.get("/api/services/:id", async (req, res) => {
 // ============================================================
 // SP-SRV-05 – ACTUALIZAR SERVICIO
 // ============================================================
-router.put("/api/services/:id", async (req, res) => {
+router.put("/api/services/:id", authenticateToken, async (req, res) => {
   try {
     const pool = getPool();
     const {
@@ -156,11 +151,28 @@ router.put("/api/services/:id", async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
+    const idUsuario = req.user?.id;
+    if (!idUsuario) {
+      return res.status(401).json({ error: "No autorizado" });
+    }
+    if (!req.user?.isprovider) {
+      return res.status(403).json({ error: "Solo proveedores" });
+    }
+
     const [result] = await pool.query(
       `UPDATE servicios 
        SET nombre=?, descripcion=?, precio=?, duracionEstimada=?, imagen=?, idCategoria=?
-       WHERE idServicio=?`,
-      [nombre, descripcion, precio, duracionEstimada, imagen, idCategoria, id],
+       WHERE idServicio=? AND idUsuario=?`,
+      [
+        nombre,
+        descripcion,
+        precio,
+        duracionEstimada,
+        imagen,
+        idCategoria,
+        id,
+        idUsuario,
+      ],
     );
 
     if (result.affectedRows === 0)
@@ -175,12 +187,20 @@ router.put("/api/services/:id", async (req, res) => {
 // ============================================================
 // SP-SRV-06 – ELIMINAR SERVICIO
 // ============================================================
-router.delete("/api/services/:id", async (req, res) => {
+router.delete("/api/services/:id", authenticateToken, async (req, res) => {
   try {
     const pool = getPool();
+    const idUsuario = req.user?.id;
+    if (!idUsuario) {
+      return res.status(401).json({ error: "No autorizado" });
+    }
+    if (!req.user?.isprovider) {
+      return res.status(403).json({ error: "Solo proveedores" });
+    }
+
     const [result] = await pool.query(
-      "DELETE FROM servicios WHERE idServicio = ?",
-      [req.params.id],
+      "DELETE FROM servicios WHERE idServicio = ? AND idUsuario = ?",
+      [req.params.id, idUsuario],
     );
 
     if (result.affectedRows === 0) {
@@ -294,6 +314,44 @@ router.get("/api/serviceProv/:email", async (req, res) => {
     return res.status(200).json(rows);
   } catch (error) {
     res.status(500).json({ message: "Error fetching service" });
+  }
+});
+
+// ============================================================
+// SP-SRV-10 – LISTAR SERVICIOS DEL PROVEEDOR AUTENTICADO
+// ============================================================
+
+router.get("/api/my-services", authenticateToken, async (req, res) => {
+  try {
+    const pool = getPool();
+    const idUsuario = req.user?.id;
+    if (!idUsuario) return res.status(401).json({ error: "No autorizado" });
+    if (!req.user?.isprovider)
+      return res.status(403).json({ error: "Solo proveedores" });
+
+    const [rows] = await pool.query(
+      `
+        SELECT 
+          s.idServicio,
+          s.nombre AS nombreServicio,
+          s.descripcion,
+          s.precio,
+          s.duracionEstimada,
+          s.imagen,
+          s.idCategoria,
+          c.descripcion AS nombreCategoria,
+          u.calificacion AS ratingProveedor
+        FROM servicios s
+        JOIN categoria c ON s.idCategoria = c.idCategoria
+        JOIN usuarios u ON s.idUsuario = u.idUsuario
+        WHERE s.idUsuario = ?
+      `,
+      [idUsuario],
+    );
+
+    res.status(200).json(rows);
+  } catch (error) {
+    res.status(500).json({ error: "Error al mostrar servicios" });
   }
 });
 

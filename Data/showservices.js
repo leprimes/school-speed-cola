@@ -1,5 +1,6 @@
 let servicios = [];
 let categories = [];
+let sessionInfo = { loggedIn: false, isProvider: false, user: null };
 
 document.addEventListener("DOMContentLoaded", async () => {
   try {
@@ -15,6 +16,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       const role = String(sessionData.user?.isprovider || "").toLowerCase();
       const isProvider =
         role === "proveedor" || role === "1" || role === "true";
+
+      sessionInfo = {
+        loggedIn: true,
+        isProvider,
+        user: sessionData.user || null,
+      };
 
       if (isProvider) {
         console.log("✅ Provider logged in — show Create Service button");
@@ -46,7 +53,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
       // Cargar servicios
-      const resp = await fetch("/api/servicesUsers", {
+      const servicesUrl = sessionInfo.isProvider
+        ? "/api/my-services"
+        : "/api/servicesUsers";
+
+      const resp = await fetch(servicesUrl, {
         method: "GET",
         credentials: "include",
       });
@@ -149,13 +160,19 @@ function applyFilters() {
 
   // Filtro por texto (nombre, descripción o proveedor)
   if (searchText.trim() !== "") {
-    filtered = filtered.filter(
-      (s) =>
+    filtered = filtered.filter((s) => {
+      const providerName = (
+        s.nombreProveedor ||
+        sessionInfo.user?.name ||
+        sessionInfo.user?.nombre ||
+        ""
+      ).toLowerCase();
+      return (
         s.nombreServicio.toLowerCase().includes(searchText) ||
         s.descripcion.toLowerCase().includes(searchText) ||
-        (s.nombreProveedor &&
-          s.nombreProveedor.toLowerCase().includes(searchText)),
-    );
+        providerName.includes(searchText)
+      );
+    });
   }
 
   // Filtro por categoría
@@ -187,6 +204,11 @@ function resetFilters() {
   renderServices(servicios);
 }
 
+function getCategoryName(idCategoria) {
+  const cat = categories.find((c) => c.idCategoria === idCategoria);
+  return cat ? cat.descripcion : "N/A";
+}
+
 // Renderizamos/Mostramos los servicios en la pag
 function renderServices(list) {
   const container = document.getElementById("services-container");
@@ -204,6 +226,15 @@ function renderServices(list) {
     col.className =
       "col-lg-4 col-md-6 align-self-center mb-30 properties-items";
 
+    const providerName =
+      servicio.nombreProveedor ||
+      sessionInfo.user?.name ||
+      sessionInfo.user?.nombre ||
+      "Proveedor";
+
+    const categoryName =
+      servicio.nombreCategoria || getCategoryName(servicio.idCategoria);
+
     // Simple HTML
     col.innerHTML = `
             <div class="item text-center">
@@ -215,9 +246,9 @@ function renderServices(list) {
                 </h4>
                 <ul style="text-align: left; margin-top: 10px;">
                     <li>Descripción: <span>${servicio.descripcion}</span></li>
-                    <li>Proveedor: <span>${servicio.nombreProveedor}</span></li>
+                    <li>Proveedor: <span>${providerName}</span></li>
                     <li>Duración Estimada: <span>${servicio.duracionEstimada}</span></li>
-                    <li>Categoria: <span>${servicio.nombreCategoria || "N/A"}</span></li>
+                    <li>Categoria: <span>${categoryName}</span></li>
                     <li>Rating: <span>${servicio.ratingProveedor || "N/A"}</span></li>
                 </ul>
                 <h6 style="color: #28a745;">$${servicio.precio.toLocaleString()}</h6>
@@ -269,7 +300,6 @@ async function handleCreateService(e) {
       duracionEstimada: parseInt(formData.get("duracionEstimada"), 10),
       imagen: (formData.get("imagen") || "").trim(),
       idCategoria: parseInt(formData.get("idCategoria"), 10),
-      email: sessionData.user.email,
     };
 
     // Basic validation before hitting API
@@ -308,7 +338,7 @@ async function handleCreateService(e) {
       e.target.reset();
 
       // Refresh services list
-      const resp = await fetch("/api/servicesUsers", {
+      const resp = await fetch("/api/my-services", {
         method: "GET",
         credentials: "include",
       });
