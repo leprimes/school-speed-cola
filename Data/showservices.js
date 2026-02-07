@@ -293,13 +293,19 @@ async function handleCreateService(e) {
     // Build service payload
     const formData = new FormData(e.target);
 
+    const idCategoriaValue =
+      formData.get("idCategoria") ||
+      formData.get("serviceCategory") ||
+      document.getElementById("serviceCategory")?.value ||
+      "";
+
     const serviceData = {
       nombre: (formData.get("nombre") || "").trim(),
       descripcion: (formData.get("descripcion") || "").trim(),
       precio: parseFloat(formData.get("precio")),
       duracionEstimada: parseInt(formData.get("duracionEstimada"), 10),
       imagen: (formData.get("imagen") || "").trim(),
-      idCategoria: parseInt(formData.get("idCategoria"), 10),
+      idCategoria: parseInt(idCategoriaValue, 10),
     };
 
     // Basic validation before hitting API
