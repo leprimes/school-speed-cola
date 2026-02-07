@@ -303,7 +303,7 @@ async function handleCreateService(e) {
       nombre: (formData.get("nombre") || "").trim(),
       descripcion: (formData.get("descripcion") || "").trim(),
       precio: parseFloat(formData.get("precio")),
-      duracionEstimada: parseInt(formData.get("duracionEstimada"), 10),
+      duracionEstimada: (formData.get("duracionEstimada") || "").trim(),
       imagen: (formData.get("imagen") || "").trim(),
       idCategoria: parseInt(idCategoriaValue, 10),
     };
@@ -312,7 +312,7 @@ async function handleCreateService(e) {
     if (
       !serviceData.nombre ||
       Number.isNaN(serviceData.precio) ||
-      Number.isNaN(serviceData.duracionEstimada) ||
+      !serviceData.duracionEstimada ||
       Number.isNaN(serviceData.idCategoria)
     ) {
       alert(

@@ -41,13 +41,12 @@ router.post("/api/services", authenticateToken, async (req, res) => {
     } = req.body;
 
     const precioNum = Number(precio);
-    const duracionNum = Number(duracionEstimada);
     const categoriaNum = Number(idCategoria);
 
     if (
       !nombre ||
       !Number.isFinite(precioNum) ||
-      !Number.isFinite(duracionNum) ||
+      !duracionEstimada ||
       !Number.isInteger(categoriaNum)
     ) {
       return res.status(400).json({
@@ -70,7 +69,7 @@ router.post("/api/services", authenticateToken, async (req, res) => {
         nombre,
         descripcion,
         precioNum,
-        duracionNum,
+        duracionEstimada,
         imagen,
         idUsuario,
         categoriaNum,
