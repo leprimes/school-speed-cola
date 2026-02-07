@@ -310,10 +310,10 @@ async function checkIfProvider() {
     });
     const data = await response.json();
 
-    if (
-      data.loggedIn &&
-      (data.user.isprovider === 1 || data.user.isprovider === true)
-    ) {
+    const role = String(data.user?.isprovider || "").toLowerCase();
+    const isProvider = role === "1" || role === "true" || role === "proveedor";
+
+    if (data.loggedIn && isProvider) {
       document.getElementById("providerChatButton").style.display = "block";
     }
   } catch (error) {
