@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mis s</title>
+    <title>Mis chats</title>
     <style>
       * {
         margin: 0;
@@ -50,12 +50,12 @@
         background: rgba(255, 255, 255, 0.3);
         transform: translateY(-2px);
       }
-      .s-container {
+      .chats-container {
         padding: 20px;
         max-height: 70vh;
         overflow-y: auto;
       }
-      .-item {
+      .chat-item {
         display: flex;
         align-items: center;
         padding: 15px;
@@ -66,12 +66,12 @@
         border: 2px solid transparent;
         background: #f8f9fa;
       }
-      .-item:hover {
+      .chat-item:hover {
         background: #e9ecef;
         border-color: #eaaa66;
         transform: translateX(5px);
       }
-      .-avatar {
+      .chat-avatar {
         width: 60px;
         height: 60px;
         border-radius: 50%;
@@ -79,39 +79,39 @@
         margin-right: 15px;
         border: 3px solid #eabc66;
       }
-      .-info {
+      .chat-info {
         flex: 1;
         min-width: 0;
       }
-      .-name {
+      .chat-name {
         font-size: 18px;
         font-weight: 600;
         color: #2d3748;
         margin-bottom: 5px;
       }
-      .-last-message {
+      .chat-last-message {
         font-size: 14px;
         color: #718096;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
-      .-meta {
+      .chat-meta {
         display: flex;
         flex-direction: column;
         align-items: flex-end;
         gap: 5px;
       }
-      .-time {
+      .chat-time {
         font-size: 12px;
         color: #a0aec0;
       }
-      .no-s {
+      .no-chats {
         text-align: center;
         padding: 60px 20px;
         color: #718096;
       }
-      .no-s-icon {
+      .no-chats-icon {
         font-size: 64px;
         margin-bottom: 20px;
         opacity: 0.5;
@@ -143,160 +143,157 @@
   <body>
     <div class="container">
       <div class="header">
-        <h1>💬 Mis s</h1>
+        <h1>💬 Mis chats</h1>
         <button class="back-btn" onclick="goBack()">← Volver</button>
       </div>
 
-      <div class="s-container" id="sContainer">
+      <div class="chats-container" id="chatsContainer">
         <div class="loading">
           <div class="spinner"></div>
-          <p>Cargando s...</p>
+          <p>Cargando chats...</p>
         </div>
       </div>
     </div>
 
     <script>
-      let currentUser = null;
+      var currentUser = null;
 
-      // Inicializar
       async function init() {
-          try {
-              // Verificar sesión
-              const response = await fetch('/api/check-session', {
-                  credentials: 'include'
-              });
-              const data = await response.json();
+        try {
+          const response = await fetch("/api/check-session", {
+            credentials: "include",
+          });
+          const data = await response.json();
 
-              if (!data.loggedIn) {
-                  window.location.href = '/index.html';
-                  return;
+          if (!data.loggedIn) {
+            window.location.href = "/index.html";
+            return;
+          }
+
+          currentUser = data.user;
+          await loadChats();
+        } catch (error) {
+          console.error("Error inicializando:", error);
+          showError("Error al cargar los chats");
+        }
+      }
+
+      async function loadChats() {
+        try {
+          var role = String(currentUser.isprovider || "").toLowerCase();
+          var isProvider =
+            role === "1" || role === "true" || role === "proveedor";
+
+          var endpoint = isProvider
+            ? "/api/chats/provider/" + currentUser.id
+            : "/api/chats/client/" + currentUser.id;
+
+          const response = await fetch(endpoint, { credentials: "include" });
+          if (!response.ok) throw new Error("Error al cargar chats");
+
+          const chats = await response.json();
+          displayChats(chats, isProvider);
+        } catch (error) {
+          console.error("Error cargando chats:", error);
+          showError("Error al cargar los chats");
+        }
+      }
+
+      function displayChats(chats, isProvider) {
+        var container = document.getElementById("chatsContainer");
+
+        if (!chats || chats.length === 0) {
+          container.innerHTML =
+            '<div class="no-chats">' +
+            '<div class="no-chats-icon">💬</div>' +
+            "<h3>No tienes chats aún</h3>" +
+            "<p>Los chats aparecerán aquí cuando comiences una conversación</p>" +
+            "</div>";
+          return;
+        }
+
+        var html = "";
+        for (var i = 0; i < chats.length; i++) {
+          var chat = chats[i];
+          var otherUser = isProvider
+            ? {
+                id: chat.idCliente,
+                nombre: chat.nombreCliente,
+                foto: chat.fotoCliente || "https://via.placeholder.com/60",
               }
+            : {
+                id: chat.idProveedor,
+                nombre: chat.nombreProveedor,
+                foto: chat.fotoProveedor || "https://via.placeholder.com/60",
+              };
 
-              currentUser = data.user;
-              console.log('Usuario actual:', currentUser);
+          var timeAgo = formatTimeAgo(chat.fechaUltimoMensaje);
 
-              // Cargar s
-              await loads();
+          html +=
+            '<div class="chat-item" onclick="openChat(' +
+            otherUser.id +
+            ')">' +
+            '<img src="' +
+            otherUser.foto +
+            '" alt="' +
+            otherUser.nombre +
+            '" class="chat-avatar">' +
+            '<div class="chat-info">' +
+            '<div class="chat-name">' +
+            otherUser.nombre +
+            "</div>" +
+            '<div class="chat-last-message">' +
+            (chat.ultimoMensaje || "Sin mensajes aún") +
+            "</div>" +
+            "</div>" +
+            '<div class="chat-meta">' +
+            '<div class="chat-time">' +
+            timeAgo +
+            "</div>" +
+            "</div>" +
+            "</div>";
+        }
 
-          } catch (error) {
-              console.error('Error inicializando:', error);
-              showError('Error al cargar los s');
-          }
+        container.innerHTML = html;
       }
 
-      // Cargar lista de s
-      async function loads() {
-          try {
-              const isProvider = currentUser.isprovider === 1 || currentUser.isprovider === true;
-              const endpoint = isProvider
-                  ? `/api/s/provider/${currentUser.id}`
-                  : `/api/s/client/${currentUser.id}`;
-
-              console.log('Cargando s desde:', endpoint);
-
-              const response = await fetch(endpoint, {
-                  credentials: 'include'
-              });
-
-              if (!response.ok) throw new Error('Error al cargar s');
-
-              const s = await response.json();
-              console.log('s recibidos:', s);
-
-              displays(s, isProvider);
-
-          } catch (error) {
-              console.error('Error cargando s:', error);
-              showError('Error al cargar los s');
-          }
+      function openChat(otherUserId) {
+        window.location.href = "/chat.html?to=" + otherUserId;
       }
 
-      // Mostrar s en la UI
-      function displays(s, isProvider) {
-          const container = document.getElementById('sContainer');
-
-          if (s.length === 0) {
-              container.innerHTML = `
-                  <div class="no-s">
-                      <div class="no-s-icon">💬</div>
-                      <h3>No tienes s aún</h3>
-                      <p>Los s aparecerán aquí cuando comiences una conversación</p>
-                  </div>
-              `;
-              return;
-          }
-
-          container.innerHTML = s.map( => {
-              const otherUser = isProvider
-                  ? {
-                      id: .idCliente,
-                      nombre: .nombreCliente,
-                      foto: .fotoCliente || 'https://via.placeholder.com/60'
-                    }
-                  : {
-                      id: .idProveedor,
-                      nombre: .nombreProveedor,
-                      foto: .fotoProveedor || 'https://via.placeholder.com/60'
-                    };
-
-              const timeAgo = formatTimeAgo(.fechaUltimoMensaje);
-
-              return `
-                  <div class="-item" onclick="open(${otherUser.id})">
-                      <img src="${otherUser.foto}" alt="${otherUser.nombre}" class="-avatar">
-                      <div class="-info">
-                          <div class="-name">${otherUser.nombre}</div>
-                          <div class="-last-message">
-                              ${.ultimoMensaje || 'Sin mensajes aún'}
-                          </div>
-                      </div>
-                      <div class="-meta">
-                          <div class="-time">${timeAgo}</div>
-                      </div>
-                  </div>
-              `;
-          }).join('');
-      }
-
-      // Abrir
-      function open(otherUserId) {
-          window.location.href = `/.html?to=${otherUserId}`;
-      }
-
-      // Formatear tiempo
       function formatTimeAgo(timestamp) {
-          if (!timestamp) return '';
+        if (!timestamp) return "";
+        var now = new Date();
+        var time = new Date(timestamp);
+        var diff = Math.floor((now - time) / 1000);
 
-          const now = new Date();
-          const time = new Date(timestamp);
-          const diff = Math.floor((now - time) / 1000); // segundos
+        if (diff < 60) return "Ahora";
+        if (diff < 3600) return Math.floor(diff / 60) + "m";
+        if (diff < 86400) return Math.floor(diff / 3600) + "h";
+        if (diff < 604800) return Math.floor(diff / 86400) + "d";
 
-          if (diff < 60) return 'Ahora';
-          if (diff < 3600) return `${Math.floor(diff / 60)}m`;
-          if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
-          if (diff < 604800) return `${Math.floor(diff / 86400)}d`;
-
-          return time.toLocaleDateString('es', { day: 'numeric', month: 'short' });
+        return time.toLocaleDateString("es", {
+          day: "numeric",
+          month: "short",
+        });
       }
 
-      // Mostrar error
       function showError(message) {
-          const container = document.getElementById('sContainer');
-          container.innerHTML = `
-              <div class="no-s">
-                  <div class="no-s-icon">⚠️</div>
-                  <h3>Error</h3>
-                  <p>${message}</p>
-              </div>
-          `;
+        var container = document.getElementById("chatsContainer");
+        container.innerHTML =
+          '<div class="no-chats">' +
+          '<div class="no-chats-icon">⚠️</div>' +
+          "<h3>Error</h3>" +
+          "<p>" +
+          message +
+          "</p>" +
+          "</div>";
       }
 
-      // Volver atrás
       function goBack() {
-          window.history.back();
+        window.history.back();
       }
 
-      // Iniciar cuando cargue la página
       window.onload = init;
     </script>
   </body>
