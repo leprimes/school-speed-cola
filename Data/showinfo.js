@@ -209,9 +209,11 @@ async function editService(idServicio) {
 
 async function cargarResenas(idUsuario, isProvider) {
   try {
+    const isProviderFlag = isProvider ? 1 : 0;
+
     const [resEscritas, resRecibidas] = await Promise.all([
-      fetch(`/api/resenas/escritas/${idUsuario}?isProvider=${isProvider}`),
-      fetch(`/api/resenas/recibidas/${idUsuario}?isProvider=${isProvider}`),
+      fetch(`/api/resenas/escritas/${idUsuario}?isProvider=${isProviderFlag}`),
+      fetch(`/api/resenas/recibidas/${idUsuario}?isProvider=${isProviderFlag}`),
     ]);
 
     const escritas = await resEscritas.json();
