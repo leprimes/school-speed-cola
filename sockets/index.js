@@ -36,7 +36,8 @@ function initSockets(server, pool) {
           return;
         }
 
-        currentUserId = normalizedId;
+        currentUserId = String(normalizedId);
+
         isAuthenticated = true;
 
         connectedUsers.set(currentUserId, socket.id);

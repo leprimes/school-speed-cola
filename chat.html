@@ -257,6 +257,20 @@
         socket.on("connect", async () => {
           console.log("Conectado al socket");
 
+          socket.on("new_message", (data) => {
+            console.log("new_message received:", data);
+            displayMessage(data.message, "received", data.timestamp, data.from);
+          });
+
+          socket.on("message_delivered", (data) => {
+            console.log("message_delivered:", data);
+            if (data.status === "offline") {
+              showNotification("Usuario no conectado...");
+            }
+          });
+
+          socket.on("error", (e) => console.error("socket error:", e));
+
           try {
             // 🔥 Nuevo: pedimos el token al backend
             const resp = await fetch("/api/socket-token", {
