@@ -205,7 +205,7 @@
 
       // Obtener IDs de URL
       const urlParams = new URLSearchParams(window.location.search);
-      targetUserId = urlParams.get("to");
+      targetUserId = parseInt(urlParams.get("to"), 10);
 
       // Inicializar chat
       async function initChat() {
