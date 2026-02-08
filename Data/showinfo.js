@@ -21,20 +21,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("nombre").value = usuario.name;
     document.getElementById("email").value = usuario.email;
     document.getElementById("telefono").value = usuario.phone;
-    document.getElementById("rol").value = usuario.isprovider
-      ? "Proveedor"
-      : "Cliente";
+    const roleStr = String(usuario.isprovider || "").toLowerCase();
+    const isProvider =
+      roleStr === "1" || roleStr === "true" || roleStr === "proveedor";
+
+    document.getElementById("rol").value = isProvider ? "Proveedor" : "Cliente";
 
     const items = document.querySelectorAll(".list-group-item");
     items[0].innerHTML = `<strong>Name:</strong> ${usuario.name}`;
     items[1].innerHTML = `<strong>Email:</strong> ${usuario.email}`;
     items[2].innerHTML = `<strong>Phone:</strong> ${usuario.phone || "N/A"}`;
-    items[3].innerHTML = `<strong>Role:</strong> ${usuario.isprovider ? "Proveedor" : "Cliente"}`;
+    items[3].innerHTML = `<strong>Role:</strong> ${isProvider ? "Proveedor" : "Cliente"}`;
     items[4].innerHTML = `<strong>User ID:</strong> ${usuario.id}`;
 
-    cargarResenas(usuario.id, usuario.isprovider);
+    cargarResenas(usuario.id, isProvider);
 
-    if (usuario.isprovider) {
+    if (isProvider) {
       const serviceResp = await fetch("/api/my-services", {
         method: "GET",
         credentials: "include",

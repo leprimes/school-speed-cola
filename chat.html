@@ -257,8 +257,15 @@
         socket.on("connect", async () => {
           console.log("Conectado al socket");
 
+          let lastIncomingKey = null;
+
+          socket.off("new_message");
           socket.on("new_message", (data) => {
-            console.log("new_message received:", data);
+            const key = `${data.from}-${data.message}-${data.timestamp}`;
+            if (key === lastIncomingKey) return;
+            lastIncomingKey = key;
+
+            if (data.from == currentUserId) return;
             displayMessage(data.message, "received", data.timestamp, data.from);
           });
 
