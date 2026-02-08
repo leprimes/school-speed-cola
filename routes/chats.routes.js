@@ -30,7 +30,7 @@ router.get("/api/chats/provider/:providerId", async (req, res) => {
       JOIN usuarios cliente ON c.idCliente = cliente.idUsuario
       WHERE c.idProveedor = ?
       ORDER BY fechaUltimoMensaje DESC`,
-      [providerId, providerId],
+      [providerId],
     );
 
     res.json(chats);
@@ -68,7 +68,7 @@ router.get("/api/chats/client/:clientId", async (req, res) => {
       JOIN usuarios proveedor ON c.idProveedor = proveedor.idUsuario
       WHERE c.idCliente = ?
       ORDER BY fechaUltimoMensaje DESC`,
-      [clientId, clientId],
+      [clientId],
     );
 
     res.json(chats);
