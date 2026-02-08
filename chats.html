@@ -1,299 +1,303 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mis Chats</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mis s</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #eaa866 0%, #a28b4b 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+      }
+      .header {
+        background: linear-gradient(135deg, #eaaf66 0%, #a2834b 100%);
+        color: white;
+        padding: 25px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .header h1 {
+        font-size: 24px;
+        font-weight: 600;
+      }
+      .back-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s;
+      }
+      .back-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+      }
+      .s-container {
+        padding: 20px;
+        max-height: 70vh;
+        overflow-y: auto;
+      }
+      .-item {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border-radius: 12px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 2px solid transparent;
+        background: #f8f9fa;
+      }
+      .-item:hover {
+        background: #e9ecef;
+        border-color: #eaaa66;
+        transform: translateX(5px);
+      }
+      .-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 15px;
+        border: 3px solid #eabc66;
+      }
+      .-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .-name {
+        font-size: 18px;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 5px;
+      }
+      .-last-message {
+        font-size: 14px;
+        color: #718096;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .-meta {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 5px;
+      }
+      .-time {
+        font-size: 12px;
+        color: #a0aec0;
+      }
+      .no-s {
+        text-align: center;
+        padding: 60px 20px;
+        color: #718096;
+      }
+      .no-s-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.5;
+      }
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #718096;
+      }
+      .spinner {
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #eabc66;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
         }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #eaa866 0%, #a28b4b 100%);
-            min-height: 100vh;
-            padding: 20px;
+        100% {
+          transform: rotate(360deg);
         }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            overflow: hidden;
-        }
-        .header {
-            background: linear-gradient(135deg, #eaaf66 0%, #a2834b 100%);
-            color: white;
-            padding: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .header h1 {
-            font-size: 24px;
-            font-weight: 600;
-        }
-        .back-btn {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s;
-        }
-        .back-btn:hover {
-            background: rgba(255,255,255,0.3);
-            transform: translateY(-2px);
-        }
-        .chats-container {
-            padding: 20px;
-            max-height: 70vh;
-            overflow-y: auto;
-        }
-        .chat-item {
-            display: flex;
-            align-items: center;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 2px solid transparent;
-            background: #f8f9fa;
-        }
-        .chat-item:hover {
-            background: #e9ecef;
-            border-color: #eaaa66;
-            transform: translateX(5px);
-        }
-        .chat-avatar {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-right: 15px;
-            border: 3px solid #eabc66;
-        }
-        .chat-info {
-            flex: 1;
-            min-width: 0;
-        }
-        .chat-name {
-            font-size: 18px;
-            font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 5px;
-        }
-        .chat-last-message {
-            font-size: 14px;
-            color: #718096;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .chat-meta {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 5px;
-        }
-        .chat-time {
-            font-size: 12px;
-            color: #a0aec0;
-        }
-        .no-chats {
-            text-align: center;
-            padding: 60px 20px;
-            color: #718096;
-        }
-        .no-chats-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #718096;
-        }
-        .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #eabc66;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <div class="header">
-            <h1>💬 Mis Chats</h1>
-            <button class="back-btn" onclick="goBack()">← Volver</button>
+      <div class="header">
+        <h1>💬 Mis s</h1>
+        <button class="back-btn" onclick="goBack()">← Volver</button>
+      </div>
+
+      <div class="s-container" id="sContainer">
+        <div class="loading">
+          <div class="spinner"></div>
+          <p>Cargando s...</p>
         </div>
-        
-        <div class="chats-container" id="chatsContainer">
-            <div class="loading">
-                <div class="spinner"></div>
-                <p>Cargando chats...</p>
-            </div>
-        </div>
+      </div>
     </div>
 
     <script>
-        let currentUser = null;
+      let currentUser = null;
 
-        // Inicializar
-        async function init() {
-            try {
-                // Verificar sesión
-                const response = await fetch('/api/check-session', {
-                    credentials: 'include'
-                });
-                const data = await response.json();
-                
-                if (!data.loggedIn) {
-                    window.location.href = '/index.html';
-                    return;
-                }
-                
-                currentUser = data.user;
-                console.log('Usuario actual:', currentUser);
-                
-                // Cargar chats
-                await loadChats();
-                
-            } catch (error) {
-                console.error('Error inicializando:', error);
-                showError('Error al cargar los chats');
-            }
-        }
+      // Inicializar
+      async function init() {
+          try {
+              // Verificar sesión
+              const response = await fetch('/api/check-session', {
+                  credentials: 'include'
+              });
+              const data = await response.json();
 
-        // Cargar lista de chats
-        async function loadChats() {
-            try {
-                const isProvider = currentUser.isprovider === 1 || currentUser.isprovider === true;
-                const endpoint = isProvider 
-                    ? `/api/chats/provider/${currentUser.id}`
-                    : `/api/chats/client/${currentUser.id}`;
-                
-                console.log('Cargando chats desde:', endpoint);
-                
-                const response = await fetch(endpoint, {
-                    credentials: 'include'
-                });
-                
-                if (!response.ok) throw new Error('Error al cargar chats');
-                
-                const chats = await response.json();
-                console.log('Chats recibidos:', chats);
-                
-                displayChats(chats, isProvider);
-                
-            } catch (error) {
-                console.error('Error cargando chats:', error);
-                showError('Error al cargar los chats');
-            }
-        }
+              if (!data.loggedIn) {
+                  window.location.href = '/index.html';
+                  return;
+              }
 
-        // Mostrar chats en la UI
-        function displayChats(chats, isProvider) {
-            const container = document.getElementById('chatsContainer');
-            
-            if (chats.length === 0) {
-                container.innerHTML = `
-                    <div class="no-chats">
-                        <div class="no-chats-icon">💬</div>
-                        <h3>No tienes chats aún</h3>
-                        <p>Los chats aparecerán aquí cuando comiences una conversación</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            container.innerHTML = chats.map(chat => {
-                const otherUser = isProvider 
-                    ? {
-                        id: chat.idCliente,
-                        nombre: chat.nombreCliente,
-                        foto: chat.fotoCliente || 'https://via.placeholder.com/60'
-                      }
-                    : {
-                        id: chat.idProveedor,
-                        nombre: chat.nombreProveedor,
-                        foto: chat.fotoProveedor || 'https://via.placeholder.com/60'
-                      };
-                
-                const timeAgo = formatTimeAgo(chat.fechaUltimoMensaje);
-                
-                return `
-                    <div class="chat-item" onclick="openChat(${otherUser.id})">
-                        <img src="${otherUser.foto}" alt="${otherUser.nombre}" class="chat-avatar">
-                        <div class="chat-info">
-                            <div class="chat-name">${otherUser.nombre}</div>
-                            <div class="chat-last-message">
-                                ${chat.ultimoMensaje || 'Sin mensajes aún'}
-                            </div>
-                        </div>
-                        <div class="chat-meta">
-                            <div class="chat-time">${timeAgo}</div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
+              currentUser = data.user;
+              console.log('Usuario actual:', currentUser);
 
-        // Abrir chat
-        function openChat(otherUserId) {
-            window.location.href = `/chat.html?to=${otherUserId}`;
-        }
+              // Cargar s
+              await loads();
 
-        // Formatear tiempo
-        function formatTimeAgo(timestamp) {
-            if (!timestamp) return '';
-            
-            const now = new Date();
-            const time = new Date(timestamp);
-            const diff = Math.floor((now - time) / 1000); // segundos
-            
-            if (diff < 60) return 'Ahora';
-            if (diff < 3600) return `${Math.floor(diff / 60)}m`;
-            if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
-            if (diff < 604800) return `${Math.floor(diff / 86400)}d`;
-            
-            return time.toLocaleDateString('es', { day: 'numeric', month: 'short' });
-        }
+          } catch (error) {
+              console.error('Error inicializando:', error);
+              showError('Error al cargar los s');
+          }
+      }
 
-        // Mostrar error
-        function showError(message) {
-            const container = document.getElementById('chatsContainer');
-            container.innerHTML = `
-                <div class="no-chats">
-                    <div class="no-chats-icon">⚠️</div>
-                    <h3>Error</h3>
-                    <p>${message}</p>
-                </div>
-            `;
-        }
+      // Cargar lista de s
+      async function loads() {
+          try {
+              const isProvider = currentUser.isprovider === 1 || currentUser.isprovider === true;
+              const endpoint = isProvider
+                  ? `/api/s/provider/${currentUser.id}`
+                  : `/api/s/client/${currentUser.id}`;
 
-        // Volver atrás
-        function goBack() {
-            window.history.back();
-        }
+              console.log('Cargando s desde:', endpoint);
 
-        // Iniciar cuando cargue la página
-        window.onload = init;
+              const response = await fetch(endpoint, {
+                  credentials: 'include'
+              });
+
+              if (!response.ok) throw new Error('Error al cargar s');
+
+              const s = await response.json();
+              console.log('s recibidos:', s);
+
+              displays(s, isProvider);
+
+          } catch (error) {
+              console.error('Error cargando s:', error);
+              showError('Error al cargar los s');
+          }
+      }
+
+      // Mostrar s en la UI
+      function displays(s, isProvider) {
+          const container = document.getElementById('sContainer');
+
+          if (s.length === 0) {
+              container.innerHTML = `
+                  <div class="no-s">
+                      <div class="no-s-icon">💬</div>
+                      <h3>No tienes s aún</h3>
+                      <p>Los s aparecerán aquí cuando comiences una conversación</p>
+                  </div>
+              `;
+              return;
+          }
+
+          container.innerHTML = s.map( => {
+              const otherUser = isProvider
+                  ? {
+                      id: .idCliente,
+                      nombre: .nombreCliente,
+                      foto: .fotoCliente || 'https://via.placeholder.com/60'
+                    }
+                  : {
+                      id: .idProveedor,
+                      nombre: .nombreProveedor,
+                      foto: .fotoProveedor || 'https://via.placeholder.com/60'
+                    };
+
+              const timeAgo = formatTimeAgo(.fechaUltimoMensaje);
+
+              return `
+                  <div class="-item" onclick="open(${otherUser.id})">
+                      <img src="${otherUser.foto}" alt="${otherUser.nombre}" class="-avatar">
+                      <div class="-info">
+                          <div class="-name">${otherUser.nombre}</div>
+                          <div class="-last-message">
+                              ${.ultimoMensaje || 'Sin mensajes aún'}
+                          </div>
+                      </div>
+                      <div class="-meta">
+                          <div class="-time">${timeAgo}</div>
+                      </div>
+                  </div>
+              `;
+          }).join('');
+      }
+
+      // Abrir
+      function open(otherUserId) {
+          window.location.href = `/.html?to=${otherUserId}`;
+      }
+
+      // Formatear tiempo
+      function formatTimeAgo(timestamp) {
+          if (!timestamp) return '';
+
+          const now = new Date();
+          const time = new Date(timestamp);
+          const diff = Math.floor((now - time) / 1000); // segundos
+
+          if (diff < 60) return 'Ahora';
+          if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+          if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+          if (diff < 604800) return `${Math.floor(diff / 86400)}d`;
+
+          return time.toLocaleDateString('es', { day: 'numeric', month: 'short' });
+      }
+
+      // Mostrar error
+      function showError(message) {
+          const container = document.getElementById('sContainer');
+          container.innerHTML = `
+              <div class="no-s">
+                  <div class="no-s-icon">⚠️</div>
+                  <h3>Error</h3>
+                  <p>${message}</p>
+              </div>
+          `;
+      }
+
+      // Volver atrás
+      function goBack() {
+          window.history.back();
+      }
+
+      // Iniciar cuando cargue la página
+      window.onload = init;
     </script>
-</body>
+  </body>
 </html>
